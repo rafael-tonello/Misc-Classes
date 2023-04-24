@@ -36,3 +36,17 @@ T Shared::Stream<T>::get()
 {
     return last;
 }
+
+template <typename T>
+future<T> Shared::Stream<T>::getNext()
+{
+    shared_ptr<promise<T>> prom;
+        
+    ID id;
+    id = this->listen([&](T data){
+        this->stopListen(id);
+        prom->set_value(data);
+    });
+
+    return prom->get_future();
+}

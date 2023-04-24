@@ -5,6 +5,7 @@
 #include <vector>
 #include <mutex>
 #include <map>
+#include <future>
 
 using namespace std;
 namespace Shared{
@@ -23,12 +24,19 @@ namespace Shared{
          * @param observer an function to be called whena  new data arrives in the stream. This function is am lambda with the signature [](T data){ }
          * @return this function returns an observer id, that can be used to stop observatin the stream
          */
-        uint listen(function<void(T data)> observer);
+        ID listen(function<void(T data)> observer);
+        /* Another way to listen data comming from the stream (redirects to 'listen' function) */
+        ID subscribe(function<void(T data)> f){ return listen(f); }
 
         /* This function adds data to the stream, i.e., all observer will receive this data
          * @param data is the data to be sent to all observers
          */
         void add(T data);
+
+        /* Another way to add data to the stream (redirects to 'add' function) */
+        void stream(T data){ add(data); }
+
+        future<T> getNext();
 
         /* Return the last received data */
         T get();
@@ -37,6 +45,9 @@ namespace Shared{
          * @param the id of the observer, previusly returned by 'listen' function
          */
         void stopListen(ID id);
+
+        /* Another way to stop lisening data comming from the stream (redirects to 'stopListen' function) */
+        ID unsubscribe(ID subscribeId){ return stopListen(subscribeId); }
     };
 }
 
