@@ -4,14 +4,14 @@
 #include <vector>
 #include <algorithm>
 
-namespace KWShared{
+namespace Shared{
     using namespace std;
     class StringUtils
     {
         public:
             StringUtils();
 
-            void split(string str,string sep, vector<string> *result);
+            vector<string> split(string str,string sep);
             string toUpper(string source);
             string toLower(string source);
             string base64_encode(unsigned char * buf, unsigned int bufLen);
