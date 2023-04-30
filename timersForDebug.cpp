@@ -21,7 +21,7 @@ void TimersForDebug::end(string name)
 
         auto tmp = Utils::getCurrentTimeMicroseconds();
         if (timers[name].currStart != 0)
-            timers[name].totalTime += tmp - timers[name].currStart;
+            timers[name].totalTime = tmp - timers[name].currStart;
             
         timers[name].steps++;
     }
@@ -29,7 +29,7 @@ void TimersForDebug::end(string name)
 
 __TimersForDebugInfo TimersForDebug::get(string name)
 {
-    if (!timers.count(name))
+    if (timers.count(name))
         return timers[name];
     
     return  __TimersForDebugInfo();

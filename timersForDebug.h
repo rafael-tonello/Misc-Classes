@@ -15,6 +15,17 @@ public:
     uint64_t totalTime = 0;
     uint64_t currStart = 0;
     uint steps = 0;
+
+    double getAverageStepTime_ms(){
+        double ret = ((double)totalTime)/((double)steps);
+        ret /= 1000.f;
+        return ret;
+    }
+
+    double getAverageStepTime_us(){
+        double ret = ((double)totalTime)/((double)steps);
+        return ret;
+    }
 };
 
 class TimersForDebug{
@@ -23,6 +34,7 @@ private:
 public:
     static void begin(string name);
     static void end(string name);
+    static void step(string name){ end(name); }
 
     static void clear();
 
