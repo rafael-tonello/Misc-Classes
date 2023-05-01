@@ -12,18 +12,20 @@ class __TimersForDebugInfo
 {
 public:
     string name = "";
-    uint64_t totalTime = 0;
+    uint64_t totalTime_us = 0;
     uint64_t currStart = 0;
     uint steps = 0;
 
     double getAverageStepTime_ms(){
-        double ret = ((double)totalTime)/((double)steps);
-        ret /= 1000.f;
+        double ret = getAverageStepTime_us() / 1000.f;
         return ret;
     }
 
     double getAverageStepTime_us(){
-        double ret = ((double)totalTime)/((double)steps);
+        if (steps == 0)
+            return 0;
+            
+        double ret = ((double)totalTime_us)/((double)steps);
         return ret;
     }
 };
@@ -33,7 +35,8 @@ private:
     static map<string, __TimersForDebugInfo> timers;
 public:
     static void begin(string name);
-    static void end(string name);
+    static void reset(string name){begin(name);}
+    static __TimersForDebugInfo end(string name);
     static void step(string name){ end(name); }
 
     static void clear();

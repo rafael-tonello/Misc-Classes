@@ -12,19 +12,25 @@ void TimersForDebug::begin(string name)
     }
 
     timers[name].currStart = Utils::getCurrentTimeMicroseconds();
+    timers[name].steps = 0;
+    timers[name].totalTime_us = 0;
 }
 
-void TimersForDebug::end(string name)
+__TimersForDebugInfo TimersForDebug::end(string name)
 {
     if (timers.count(name))
     {
 
         auto tmp = Utils::getCurrentTimeMicroseconds();
         if (timers[name].currStart != 0)
-            timers[name].totalTime = tmp - timers[name].currStart;
+            timers[name].totalTime_us = tmp - timers[name].currStart;
             
         timers[name].steps++;
+
+        return timers[name];
     }
+
+    return __TimersForDebugInfo();
 }
 
 __TimersForDebugInfo TimersForDebug::get(string name)

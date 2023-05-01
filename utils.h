@@ -11,8 +11,10 @@
 #include <sys/wait.h>
 #include <sstream>
 #include <algorithm>
-#include <ranges>
 #include <iostream>
+#include <cctype>
+
+#include <timersForDebug.h>
 
 using namespace std;
     using named_lock_f = function<void()>;
@@ -51,7 +53,27 @@ using namespace std;
         static void process_mem_usage(double& vm_usage, double& resident_set);
         static double process_vm_usage();
         static double process_resident_usage();
-        static string createUniqueId();
+        /**
+         * @brief Create a Unique Id object
+         * 
+         * @param validChars valid chars in the new id
+         * @param size the maximum of chars in thenew id
+         * @param prefix a text to bet put in the start of the new id (in addition to 'size' generated chars)
+         * @param sufix a text to bet put in the end of the new id (in addition to 'size' generated chars)
+         * @param includeTimeStampAtBegining include a chrono millisseconds count since ephoc
+         * @return string 
+         */
+        static string createUniqueId(string validChars = "abcedfghijklmnopqrsuvxywzABCDEFGHIJKLMNOPQRSTUVXYWZ", int size = 20, string prefix = "UID", string sufix = "", bool includeTimeStampAtBegining = true);
+        /**
+         * @brief Create a Unique Id object using the specified format (aaaahhh000)
+         * 
+         * @param format format of the new id. Use 'A' for a-z char, 'H' for hex(0-f) char and '0' to a number (0-9)
+         * @param prefix a text to bet put in the start of the new id (in addition generated chars)
+         * @param sufix a text to bet put in the end of the new id (in addition generated chars)
+         * @return string 
+         */
+        static string createUniqueId_customFormat(string format, string prefix = "", string sufix = "");
+        static string createUnidqueId_guidFormat();
 
         static string readTextFileContent(string fileName);
         static void writeTextFileContent(string fileName, string content);
@@ -68,9 +90,8 @@ using namespace std;
         
         static bool isNumber(string source);
 
-        enum NameType{ALGORITHM_GENERATED, REAL_NAME_COMBINATION};
-        static string getRandomName(NameType typeOfName, int AlgoGenMaxSyllables = 3);
         static map<void*, string> getANameDB;
+        enum NameType{ALGORITHM_GENERATED, REAL_NAME_COMBINATION};
         static string getAName(int number, NameType typeOfName = ALGORITHM_GENERATED, int AlgoGenMaxSyllables = 3);
         static string getAName(void* p, NameType typeOfName = ALGORITHM_GENERATED, int AlgoGenMaxSyllables = 3);
 
@@ -78,14 +99,14 @@ using namespace std;
 
 
         template<typename T>
-        static future<void> parallel_foreach(vector<T> items, function<void(T)> f, ThreadPool *tasker)
+        static future<void> parallel_foreach(vector<T> items, function<void(T, void* additionalArgs)> f, ThreadPool *tasker, void* additionalArgs = NULL)
         {
             vector<future<void>> pendingTasks = {};
             for (auto &c: items)
             {
-                pendingTasks.push_back(tasker->enqueue([&](T &item){
-                    f(item);
-                }, c));
+                pendingTasks.push_back(tasker->enqueue([&](T &item, void* argsp){
+                    f(item, argsp);
+                }, c, additionalArgs));
             };
 
             /*return tasker->enqueue([&](auto pendingTasks2){
