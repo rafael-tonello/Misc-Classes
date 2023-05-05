@@ -462,15 +462,16 @@ void Utils::appendTextFileContent(string fileName, string content)
 
 string Utils::stringReplace(string source, string replace, string by)
 {
-    if (source.find(replace) != string::npos)
+    stringstream ret;
+    auto pos = source.find(replace);
+    while (pos != string::npos)
     {
-        string tmp = source.substr(0, source.find(replace));
-        tmp += by;
-        tmp += source.substr(source.find(replace)+replace.size());
-        return Utils::stringReplace(tmp, replace, by);
+        ret << source.substr(0, pos) << by;
+        source = source.substr(pos + replace.size());
+        pos = source.find(replace);
     }
-    else
-        return source;
+    ret << source;
+    return ret.str();
 }
 
 string Utils::stringReplace(string source, vector<tuple<string, string>> replaceAndByTuples)
