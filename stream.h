@@ -1,5 +1,5 @@
-#ifndef __SHARED__STREAM__
-#define __SHARED__STREAM__
+#ifndef __Common__STREAM__
+#define __Common__STREAM__
 
 #include <functional>
 #include <vector>
@@ -8,7 +8,7 @@
 #include <future>
 
 using namespace std;
-namespace Shared{
+namespace Common{
     #define ID uint
 
     template <typename T>

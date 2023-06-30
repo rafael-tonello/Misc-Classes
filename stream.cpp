@@ -2,7 +2,7 @@
 #include "stream.h"
 
 template <typename T>
-ID Shared::Stream<T>::listen(function<void(T data)> observer)
+ID Common::Stream<T>::listen(function<void(T data)> observer)
 {
     ID ret = currId++;
     listenerMutex.lock();
@@ -12,7 +12,7 @@ ID Shared::Stream<T>::listen(function<void(T data)> observer)
 }
 
 template <typename T>
-void Shared::Stream<T>::add(T data)
+void Common::Stream<T>::add(T data)
 {
     last = data;
     listenerMutex.lock();
@@ -24,7 +24,7 @@ void Shared::Stream<T>::add(T data)
 }
 
 template <typename T>
-void Shared::Stream<T>::stopListen(ID id)
+void Common::Stream<T>::stopListen(ID id)
 {
     listenerMutex.lock();
     listeners.erase(id);
@@ -32,15 +32,15 @@ void Shared::Stream<T>::stopListen(ID id)
 }
 
 template <typename T>
-T Shared::Stream<T>::get()
+T Common::Stream<T>::get()
 {
     return last;
 }
 
 template <typename T>
-future<T> Shared::Stream<T>::getNext()
+future<T> Common::Stream<T>::getNext()
 {
-    shared_ptr<promise<T>> prom;
+    Common_ptr<promise<T>> prom;
         
     ID id;
     id = this->listen([&](T data){

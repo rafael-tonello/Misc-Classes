@@ -99,67 +99,86 @@ string Utils::charVecToHex(const char* data, size_t size)
     return charVecToHex((char*)data, size);
 }
 
-string Utils::ssystem (string command, bool removeTheLastLF) {
-    //todo:change it to use popen (https://stackoverflow.com/questions/45202379/how-does-popen-work-and-how-to-implement-it-into-c-code-on-linux)
-    char tmpname [L_tmpnam];
-    std::tmpnam ( tmpname );
-
-    char tmpname2 [L_tmpnam];
-    std::tmpnam ( tmpname2 );
-    std::string scommand = command;
-    std::string cmd = scommand + " &>> " + tmpname;
-
-    Utils::writeTextFileContent(string(tmpname2) + ".sh", cmd);
-
-    auto pid = fork();
-
-    if (pid < 0)
-    {
-
-    }
-    else if (pid == 0)
-    {
-        execlp("chmod", "chmod", "+x", (string(tmpname2)+".sh").c_str(), NULL);
-
-        exit(0);
-    }
-
-    waitpid(pid, 0, 0);
-
-
-    pid = fork();
-
-    if (pid < 0)
-    {
-
-    }
-    else if (pid == 0)
-    {
-        execlp((string(tmpname2)+".sh").c_str(), (string(tmpname2)+".sh").c_str(), NULL);
-        exit(0);
-    }
-
-    waitpid(pid, 0, 0);
-
-
-
-    std::ifstream file(tmpname, std::ios::in | std::ios::binary );
-    std::string result;
-    if (file) {
-        while (!file.eof()) result.push_back(file.get())
-            ;
-        file.close();
-    }
-    remove(tmpname);
-    remove(tmpname2);
+vector<string> Utils::splitString(string source, string split_by)
+{
+    vector<string> result;
     
-    //remove the last character, with is comming with invalid value
-    result = result.substr(0, result.size()-1);
+    while (true)
+    {
+        if (auto pos = source.find(split_by); pos != string::npos)
+        {
+            result.push_back(source.substr(0, pos));
+            source = source.substr(pos + split_by.size());
+        }
+        else
+            break;
+    }
 
-    if (removeTheLastLF)
-        result = result.substr(0, result.size()-1);
+    if (source != "")
+        result.push_back(source);
 
     return result;
+}
+
+string Utils::strToUpper(std::string source)
+{
+    std::string result = source;
+
+    for (char& c : result) {
+        c = std::toupper(c);
+    }
+
+    return result;
+}
+
+string Utils::strToLower(std::string source)
+{
+    std::string result = source;
+
+    for (char& c : result) {
+        c = std::tolower(c);
+    }
+
+    return result;
+}
+
+string Utils::getOnly(string source, string validChars)
+{
+    string ret = "";
+    for (auto &c: source)
+        if (validChars.find(c) != string::npos)
+            ret.push_back(c);
+
+    return ret;
+}
+
+string Utils::ssystem (string command, bool removeTheLastLF) {
+
+    const int bufferSize = 128;
+    char buffer[bufferSize];
+    std::string output;
+
+    // Executar o comando e redirecionar stdout e stderr para o mesmo arquivo temporário
+    FILE* pipe = popen((command + " 2>&1").c_str(), "r");
+    if (pipe == nullptr) {
+        std::cerr << "Erro ao executar o comando." << std::endl;
+        return output;
+    }
+
+    // Ler a saída do subprocesso (stdout e stderr)
+    while (fgets(buffer, bufferSize, pipe) != nullptr) {
+        output += buffer;
+    }
+
+    // Fechar o subprocesso
+    pclose(pipe);
+
+    // Remover a quebra de linha final, se necessário
+    if (removeTheLastLF && !output.empty() && output.back() == '\n') {
+        output.pop_back();
+    }
+
+    return output;
 }
 
 future<string> Utils::asystem(string command, bool removeTheLastLF)
@@ -293,6 +312,14 @@ string Utils::createUniqueId_customFormat(string format, string prefix, string s
     auto getAlpha = [chars](){ return chars[(rand() % (chars.size()-10))+10]; };
     auto getNum = [chars](){ return chars[rand() % 10]; };
     auto getHex = [chars](){ return chars[rand() % 16]; };
+    auto getAlphaRandUpper = [getAlpha, chars](){
+        if (((rand() % 2)+1) == 2)
+            return (char)toupper(getAlpha());
+        else
+            return getAlpha();
+
+    };
+
     
     for (size_t c = 0; c < format.size(); c++)
     {
@@ -306,6 +333,8 @@ string Utils::createUniqueId_customFormat(string format, string prefix, string s
             ret << (char)toupper(getHex());
         else if (format[c] == '0')
             ret << getNum();
+        else if (format[c] == '?')
+            ret << (vector<function<char()>>({ getAlphaRandUpper, getNum, getHex}))[rand() % 3]();
         else
             ret << format[c];
     }
@@ -566,4 +595,26 @@ string Utils::getNestedExceptionText(exception &e, string prefix, int level)
     }
 
     return ret;
+}
+
+string Utils::ltrim(string s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+
+    return s;
+}
+
+// trim from end (in place)
+string Utils::rtrim(string s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+
+    return s;
+}
+
+// trim from both ends (in place)
+string Utils::trim(std::string s) {
+    return rtrim(ltrim(s));
 }
